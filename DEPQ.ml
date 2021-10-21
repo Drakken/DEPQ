@@ -1,6 +1,7 @@
 (*
  * array-based double-ended priority queue (DEP queue)
- * copyright (c) 2021 Daniel S. Bensen
+ * heap implementation based on Cormen et. al., Introduction to Algorithms
+ * other code copyright (c) 2021 Daniel S. Bensen
  *)
 
 let is_even n = ( n  = 2*(n/2))
@@ -102,10 +103,11 @@ type 'a t = { hi: 'a H.t; lo: 'a H.t }
 let max  q = 2 * (Array.length q.lo.H.array)
 let size q = q.lo.H.size + q.hi.H.size
 
-let is_full q = size q = max q
+let is_empty q = size q = 0
+let is_full  q = size q = max q
 
-let max q = H.top q.hi
-let min q = H.top q.lo
+let best  q = H.top q.hi
+let worst q = H.top q.lo
 
 let hdiff q = q.hi.H.size - q.lo.H.size
 
@@ -172,7 +174,7 @@ let pop_n_swap h1 h2 =
     let size = a.H.size
     and diff = H.diff b a
     in
-    if      has_two_children                  na size      then x
+    if        has_two_children                na size      then x
     else if is_leaf_with_opposite_leaf        na size diff then do_n a na b
     else if is_last_parent_with_2_left_heaps  na size diff then x
     else if is_only_child                     na size      then do_n a na b
@@ -233,15 +235,19 @@ let test_heap () =
 
 let () = print_endline ("Test ok? " ^ Bool.to_string (test_heap()))
 
+let print_num n = print_string (string_of_int n ^ " ")
+
 let test_queue () =
   let q = make 40 0 (>) in
   for n = 1 to 40 do ignore (insert q n) done;
-  for n = 1 to 10 do print_int (pop  q) done; print_newline();
-  for n = 1 to 10 do print_int (drop q) done; print_newline();
+  for n = 1 to 10 do print_num (pop  q) done; print_newline();
+  for n = 1 to 10 do print_num (drop q) done; print_newline();
   let q = make 100 0 (>) in
   for n = 1 to 100 do ignore (insert q (Random.int 200)) done;
-  for n = 1 to 20 do print_int (pop  q) done; print_newline();
-  for n = 1 to 20 do print_int (drop q) done; print_newline()
+  for n = 1 to 20 do print_num (pop  q) done; print_newline();
+  for n = 1 to 20 do print_num (drop q) done; print_newline();
+  for n = 1 to 20 do print_num (pop  q) done; print_newline();
+  for n = 1 to 20 do print_num (drop q) done; print_newline()
 
 let () = test_queue ()
 
