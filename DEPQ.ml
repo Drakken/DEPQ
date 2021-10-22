@@ -46,7 +46,7 @@ module Heap = struct
 
   let heapify h = heapify_n h 1
 
-  let build h = for n = h.size/2 downto 1 do heapify_n h n done; h
+  let build h = for n = h.size/2 downto 1 do ignore (heapify_n h n) done; h
 
   let init max f beats = build { array = Array.init max f; size = max; beats }
 
@@ -76,9 +76,11 @@ module Heap = struct
             do_n (n_parent n))
     in do_n n
 
-  let insert h x =
+  let insertn h x =
     if h.size < max h then float_n h (grow h) x
     else invalid_arg "insert: heap is full"
+
+  let insert h x = let _ = insertn h x in ()
 
   let floatify h n = heapify_n h (float_n h n h.:(n))
 
@@ -86,7 +88,7 @@ module Heap = struct
 
   let hop src dest =
     let n = shrink src in
-    ignore (insert dest src.:(n+1))
+    insert dest src.:(n+1)
 
 end
 
@@ -146,11 +148,11 @@ let insert q xnew =
        then (H.insert a xnew; H.insert b xmid)
        else (H.insert a xmid; H.insert b xnew)
 
-let[@inline] has_two_children                  n size      = (n <= H.n_parent (size-1))                     
-let[@inline] is_leaf_with_opposite_leaf        n size diff = (n > H.n_parent size)                  
+let[@inline]         has_two_children          n size      = (n <= H.n_parent (size-1))                     
+let[@inline]    is_leaf_with_opposite_leaf     n size diff = (n > H.n_parent size)                  
 let[@inline] is_last_parent_with_2_left_heaps  n size diff = (diff=0 && is_even size && n = H.n_parent size)  
-let[@inline] is_only_child                     n size      = (is_even size && n = size)                     
-let[@inline] other_heap_has_extra_left_child   n size diff = (diff=1 && is_odd  size)
+let[@inline]          is_only_child            n size      = (is_even size && n = size)                     
+let[@inline]  other_heap_has_extra_left_child  n size diff = (diff=1 && is_odd  size)
 let[@inline] is_parent_of_left_only_with_hdiff n size diff = (diff=1 && is_even size && n = H.n_parent size)
 
 let pop_n_swap h1 h2 =
@@ -173,12 +175,12 @@ let pop_n_swap h1 h2 =
       do_swap a na b =
     let size = a.H.size
     and diff = H.diff b a
-    in
-    if        has_two_children                na size      then x
-    else if is_leaf_with_opposite_leaf        na size diff then do_n a na b
+    in 
+    if             has_two_children           na size      then x
+    else if    is_leaf_with_opposite_leaf     na size diff then do_n a na b
     else if is_last_parent_with_2_left_heaps  na size diff then x
-    else if is_only_child                     na size      then do_n a na b
-    else if other_heap_has_extra_left_child   na size diff then do_2 a na b (H.n_left  na)
+    else if          is_only_child            na size      then do_n a na b
+    else if  other_heap_has_extra_left_child  na size diff then do_2 a na b (H.n_left  na)
     else if is_parent_of_left_only_with_hdiff na size diff then do_2 a na b (H.n_right na)
     else
       invalid_arg (Printf.sprintf "na=%d, size=%d, diff=%d" na size diff)
@@ -201,7 +203,6 @@ let drop q =
 
 
 (********************* testing ****************************)
-
 
 let rec is_partial h n =
   let open Heap in
@@ -233,21 +234,4 @@ let test_heap () =
     && succeeds (fun () -> for n = 1 to 20 do ignore (insert h n) done; true) ()
     && succeeds (fun () -> for n = 20 downto 1 do if fst (pop h) <> n then invalid_arg "popped wrong element" done; true) ()
 
-let () = print_endline ("Test ok? " ^ Bool.to_string (test_heap()))
-
-let print_num n = print_string (string_of_int n ^ " ")
-
-let test_queue () =
-  let q = make 40 0 (>) in
-  for n = 1 to 40 do ignore (insert q n) done;
-  for n = 1 to 10 do print_num (pop  q) done; print_newline();
-  for n = 1 to 10 do print_num (drop q) done; print_newline();
-  let q = make 100 0 (>) in
-  for n = 1 to 100 do ignore (insert q (Random.int 200)) done;
-  for n = 1 to 20 do print_num (pop  q) done; print_newline();
-  for n = 1 to 20 do print_num (drop q) done; print_newline();
-  for n = 1 to 20 do print_num (pop  q) done; print_newline();
-  for n = 1 to 20 do print_num (drop q) done; print_newline()
-
-let () = test_queue ()
-
+let _ = test_heap() || failwith "failed Heap test"
