@@ -1,7 +1,7 @@
 (*
  * array-based double-ended priority queue (DEP queue)
  * heap implementation based on Cormen et. al., Introduction to Algorithms
- * other code copyright (c) 2021 Daniel S. Bensen
+ * copyright (c) 2021 Daniel S. Bensen
  *)
 
 
@@ -14,9 +14,9 @@ exception Underflow
 let underflow () = raise Underflow
 let  overflow () = raise Overflow
 
-let n_parent n = n/2    
-let n_left   n = 2*n    
-let n_right  n = 2*n + 1
+let[@inline] n_parent n = n/2    
+let[@inline] n_left   n = 2*n    
+let[@inline] n_right  n = 2*n + 1
 
 let[@inline]         has_two_children          n size      = (n <= n_parent (size-1))                     
 let[@inline]    is_leaf_with_opposite_leaf     n size      = (n > n_parent size)                  
@@ -102,18 +102,38 @@ let ( .:()   ) = H.( .:()   )
 
 type 'a t = { hi: 'a H.t; lo: 'a H.t }
 
-let max  q = 2 * (Array.length q.lo.H.array)
-let size q = q.lo.H.size + q.hi.H.size
+let[@inline] max  q = 2 * (Array.length q.lo.H.array)
+let[@inline] size q = q.lo.H.size + q.hi.H.size
 
-let is_empty q = size q = 0
-let is_full  q = size q = max q
+let[@inline] is_empty q = size q = 0
+let[@inline] is_full  q = size q = max q
 
-let  top    q = H.top  q.hi
-let  bottom q = H.top  q.lo
-let otop    q = H.otop q.hi
-let obottom q = H.otop q.lo
+let[@inline] hdiff q = q.hi.H.size - q.lo.H.size
 
-let hdiff q = q.hi.H.size - q.lo.H.size
+let[@inline] hhi q = q.hi
+let[@inline] hlo q = q.lo
+
+let tob fh q =           (* top or bottom :) *)
+  let size = size q
+  in   if size > 1 then (fh q).H.:(1)
+  else if size = 0 then underflow()
+  else if hdiff q = 1
+  then q.hi.H.:(1)
+  else q.lo.H.:(1)
+
+let otob fh q =
+  let size = size q
+  in   if size > 1 then Some (fh q).H.:(1)
+  else if size = 0 then None
+  else if hdiff q = 1
+  then Some q.hi.H.:(1)
+  else Some q.lo.H.:(1)
+
+let  top q =  tob hhi q
+let otop q = otob hhi q
+
+let  bottom q =  tob hlo q
+let obottom q = otob hlo q
 
 let clear q =
   H.clear q.hi;
@@ -225,8 +245,7 @@ module Make (E: Typeof_Element) = struct
     let ( .:()   ) h n   = h.array.(n-1)
     let ( .:()<- ) h n x = h.array.(n-1) <- x
 
-    let  top h = if h.size > 0 then      h.:(1) else underflow ()
-    let otop h = if h.size > 0 then Some h.:(1) else None
+    let top h = if h.size > 0 then h.:(1) else underflow ()
 
     let swap h1 n1 h2 n2 =
       let temp = h1.:(n1) in
@@ -285,16 +304,38 @@ module Make (E: Typeof_Element) = struct
 
   type t = { hi: H.t; lo: H.t }
 
-  let max  q = 2 * (Array.length q.lo.H.array)
-  let size q = q.lo.H.size + q.hi.H.size
+let[@inline] max  q = 2 * (Array.length q.lo.H.array)
+let[@inline] size q = q.lo.H.size + q.hi.H.size
 
-  let is_empty q = size q = 0
-  let is_full  q = size q = max q
+let[@inline] is_empty q = size q = 0
+let[@inline] is_full  q = size q = max q
 
-  let  top    q = H.top  q.hi
-  let  bottom q = H.top  q.lo
-  let otop    q = H.otop q.hi
-  let obottom q = H.otop q.lo
+let[@inline] hdiff q = q.hi.H.size - q.lo.H.size
+
+let[@inline] hhi q = q.hi
+let[@inline] hlo q = q.lo
+
+let tob fh q =           (* top or bottom :) *)
+  let size = size q
+  in   if size > 1 then (fh q).H.:(1)
+  else if size = 0 then underflow()
+  else if hdiff q = 1
+  then q.hi.H.:(1)
+  else q.lo.H.:(1)
+
+let otob fh q =
+  let size = size q
+  in   if size > 1 then Some (fh q).H.:(1)
+  else if size = 0 then None
+  else if hdiff q = 1
+  then Some q.hi.H.:(1)
+  else Some q.lo.H.:(1)
+
+let  top q =  tob hhi q
+let otop q = otob hhi q
+
+let  bottom q =  tob hlo q
+let obottom q = otob hlo q
 
   let hdiff q = q.hi.H.size - q.lo.H.size
 
