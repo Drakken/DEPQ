@@ -14,6 +14,9 @@ memory than a larger one.
 
 User's guide
 
+exception Overflow
+exception Underflow
+
 'a t: the type of DEP queues
 
 make max x cmp: create a queue with a specified comparison function (boolean)
@@ -24,13 +27,17 @@ make max x cmp: create a queue with a specified comparison function (boolean)
                 * You have to provide an initial value for Array.make to create
                   the heaps, but it won't actually be used in the queue.
 
-insert q x: add a new item to the queue
+insert q x: add a new item to the queue. Raises Overflow if the queue is full.
+oinsert q x: Returns a unit option.
 
-best  q: the element at the top of the queue 
-worst q: the element at the bottom of the queue
+top q: the element at the top of the queue
+bottom q: the element at the bottom of the queue
 
-pop  q: remove and return the best element from the top of the queue
-drop q: remove and return the worst element from the bottom of the queue
+pop  q: remove and return the element at the top of the queue
+drop q: remove and return the element at the bottom of the queue
+
+top, pop, drop, and bottom raise Underflow if the queue is empty.
+otop, opop, odrop, and obottom return options.
 
 max q: the total capacity of the queue
 
@@ -40,3 +47,20 @@ is_empty q: whether the queue doesn't have any elements in it (size q = 0)
 is_full q: whether the queue is completely filled (size q = max q)
 
 clear q: delete all elements from the queue (takes O(1) time)
+
+Make (E): creates modules for complex elements. It has mostly the same 
+          functions as polymorphic queues (except they're not polymorphic).
+
+  type element = E.t: the type of elements
+
+  type t: the type of DEPQs
+
+  make max x: no comparison function required (uses E.beats).
+
+Typeof_Element: the type of modules that can be passed to Make
+
+  type t: the type of the elements in the queue
+
+  beats: the comparison function. Returns true when the first argument
+         belongs higher in the queue than the second argument.
+ 
