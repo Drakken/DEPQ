@@ -1,10 +1,9 @@
 opam-version: "2.0"
 name: "DEPQ"
 version: "0.0"
-synopsis: "array-based double-ended priority queues"
+synopsis: "array-based double-ended priority queues in OCaml"
 description: """
-SMA* search in OCaml. Retains high-cost nodes as stubs containing the action and the cost.
-This speeds up regeneration and enables lowest-cost stubs to be selected first.
+Based on heaps described in Cormen et. al., Introduction to Algorithms
 """
 authors: "Dan Bensen <danbensen@att.net>"
 license: "MIT"
